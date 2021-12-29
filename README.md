@@ -14,7 +14,7 @@ Virtual Private Cloud
 
 ユーザー独自の空間、それぐらいの認識
 
-![vpc設定](./vpc.png)
+![vpc設定](/images/vpc.png)
 
 名前タグは設定しておいた方が管理画面で分かりやすい
 
@@ -29,7 +29,7 @@ IPv6の例: `3002:0bd6:0000:0000:0000:ee00:0033:6778`
 ## サブネットの作成
 VPCを細分化したもの この中にRDSやEC2を配置する
 
-![subnet設定](./subnet.png)
+![subnet設定](/images/subnet.png)
 
 `10.0.0.0/16`のVPCで、`10.0.1`が先頭に来る256個のIPアドレスをグループ化したことになる
 
@@ -37,31 +37,31 @@ VPCを細分化したもの この中にRDSやEC2を配置する
 
 `10.0.0.0/16`のVPCで、`10.1.1.0/24`のサブネットを作ろうとすると、VPCのホスト部にサブネットが入っていないので、エラーになる
 
-![subnetエラー](./invalid_subnet.png)
+![subnetエラー](/images/invalid_subnet.png)
 
 ## インターネットゲートウェイの作成
 VPCが外部とやり取りするためのもの
 
-![internet_gateway設定](./internet_gateway.png)
+![internet_gateway設定](/images/internet_gateway.png)
 
 作成しただけではVPCと紐づけられていない(Detached)
 
-![VPC割り当て](./vpc_attach.png)
+![VPC割り当て](/images/vpc_attach.png)
 
 ## ルートテーブルの作成
 ルーティング(トラフィックの経路選択)のために必要、それぐらいの認識
 
-![route_table設定](./route_table.png)
+![route_table設定](/images/route_table.png)
 
 この後にルートの編集を行う
 
-![route編集](./route_config.png)
+![route編集](/images/route_config.png)
 
 `0.0.0.0/0`は全ての宛先を意味するもの([参考](https://www.wdic.org/w/WDIC/0.0.0.0))で、全ての宛先に対して、インターネットゲートウェイを通るようにする、という設定をしている
 
 サブネットとも紐付ける必要がある
 
-![サブネットとの紐付け](./subnet_associate.png)
+![サブネットとの紐付け](/images/subnet_associate.png)
 
 ## セキュリティグループの作成
 この通信は許可するとか、この通信は拒否するといった設定
@@ -76,7 +76,7 @@ VPCが外部とやり取りするためのもの
 
 アウトバウンドルールはデフォルトで、タイプはすべてのトラフィック、送信先は`0.0.0.0/0`に設定されている
 
-![security_group設定](./security_group.png)
+![security_group設定](/images/security_group.png)
 
 説明は必須で、日本語は使えない
 
@@ -89,25 +89,25 @@ Relational Database Service
 
 エンジンのタイプはアプリケーションで使うのものを選択する
 
-![RDS設定1](rds1.png)
+![RDS設定1](/images/rds1.png)
 
-![RDS設定2](rds2.png)
+![RDS設定2](/images/rds2.png)
 
-![RDS設定3](rds3.png)
+![RDS設定3](/images/rds3.png)
 
 サブネットグループは、サブネットをまとめたものぐらいの認識
 
 アベイラビリティゾーンが別のサブネットが2つないと、RDSを作成することができなかった
 
-![RDS作成エラー](rds_error.png)
+![RDS作成エラー](/images/rds_error.png)
 
 というわけで、ap-northeast-1cのサブネットを追加
 
-![サブネット追加](add_subnet.png)
+![サブネット追加](/images/add_subnet.png)
 
 これでRDSを作成できるようになった
 
-![RDS詳細](rds_detail.png)
+![RDS詳細](/images/rds_detail.png)
 
 マルチAZは、異なるアベイラビリティゾーンにRDSを配置し、問題が発生したときに、切り替えを行う仕組み 無料利用枠だと使用できない
 
@@ -120,25 +120,25 @@ AMI(Amazon マシンイメージ)はAmazon Linux 2 AMIを選択する
 
 インスタンスタイプ(CPUのスペックなどをプランにしたもの)は無料枠のt2.microを選択
 
-![EC2設定1](./ec2_1.png)
+![EC2設定1](/images/ec2_1.png)
 
 色々あるが、ネットワーク、サブネット、自動割り当てパブリックIP以外はそのまま
 
 自動割り当てパブリックIPは、パブリックIPを作成するインスタンスに自動で割り当てるかの設定で、これを有効にするとインスタンスを停止したタイミングでIPアドレスが変わったりするので、今回は無効に設定
 
-![EC2設定2](./ec2_2.png)
+![EC2設定2](/images/ec2_2.png)
 
 そのまま
 
-![EC2設定3](./ec2_3.png)
+![EC2設定3](/images/ec2_3.png)
 
 分かりやすいようにタグをつけておく
 
-![EC2設定4](./ec2_4.png)
+![EC2設定4](/images/ec2_4.png)
 
 サービス利用者がアクセスするための`test_http`、開発者がSSH接続するための`test_ssh`、RDSと接続するための`test_production`を設定する
 
-![keypair](./keypair.png)
+![keypair](/images/keypair.png)
 
 SSH接続する時に必要
 
@@ -149,8 +149,8 @@ EC2の設定で、自動割り当てパブリックIPを無しに設定してい
 
 その後、EC2と紐づける
 
-![EC2への紐付け](./elastic_ip_1.png)
+![EC2への紐付け](/images/elastic_ip_1.png)
 
-![EC2詳細](./elastic_ip_2.png)
+![EC2詳細](/images/elastic_ip_2.png)
 
 (パブリックIPv4アドレスに注目)

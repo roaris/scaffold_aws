@@ -38,3 +38,12 @@ VPCを細分化したもの この中にRDSやEC2を配置する
 `10.0.0.0/16`のVPCで、`10.1.1.0/24`のサブネットを作ろうとすると、VPCのホスト部にサブネットが入っていないので、エラーになる
 
 ![subnetエラー](./invalid_subnet.png)
+
+## インターネットゲートウェイの作成
+VPCが外部とやり取りするためのもの
+
+![internet_gateway設定](./internet_gateway.png)
+
+作成しただけではVPCと紐づけられていない(Detached)
+
+![VPC割り当て](./vpc_attach.png)

@@ -141,3 +141,16 @@ AMI(Amazon マシンイメージ)はAmazon Linux 2 AMIを選択する
 ![keypair](./keypair.png)
 
 SSH接続する時に必要
+
+## Elastic IPの作成
+EC2の設定で、自動割り当てパブリックIPを無しに設定しているので、このままだとサービスにアクセスすることができない
+
+デフォルトの設定で作成
+
+その後、EC2と紐づける
+
+![EC2への紐付け](./elastic_ip_1.png)
+
+![EC2詳細](./elastic_ip_2.png)
+
+(パブリックIPv4アドレスに注目)

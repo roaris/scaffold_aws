@@ -283,12 +283,14 @@ $ sudo userdel -r ec2-user
 まず、yum(パッケージ管理ツール)をアップデートする
 
 ```
+(EC2)
 $ sudo yum update
 ```
 
 次に根幹となるパッケージをインストールする これは呪文
 
 ```
+(EC2)
 $ sudo yum install \
 git make gcc-c++ patch \
 openssl-devel \
@@ -300,12 +302,14 @@ epel-release
 
 rbenv(Rubyのバージョン管理ツール)をインストールする
 ```
+(EC2)
 $ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
 ```
 
 .bash_profileにrbenvのパスを通すコマンドを記述する
 
 ```
+(EC2)
 $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
 $ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 $ source .bash_profile
@@ -316,6 +320,7 @@ $ source .bash_profile
 ruby-buildをインストールする rbenvとruby-buildで複数のバージョンのrubyが管理できるようになる
 
 ```
+(EC2)
 $ git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
 $ rbenv rehash
 ```
@@ -323,6 +328,7 @@ $ rbenv rehash
 rbenvを使って、使用するバージョンのRubyをインストールする
 
 ```
+(EC2)
 $ rbenv install -v 2.6.8
 $ rbenv global 2.6.8
 $ rbenv rehash
@@ -332,12 +338,14 @@ $ ruby -v
 次にnode.jsをインストールする
 
 ```
+(EC2)
 $ curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
 ```
 
 ↑これは呪文
 
 ```
+(EC2)
 $ sudo yum -y install nodejs
 $ node -v
 ```
@@ -345,7 +353,96 @@ $ node -v
 最後にyarnをインストール
 
 ```
+(EC2)
 $ curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
 $ sudo yum -y install yarn
 $ yarn -v
 ```
+
+## アプリケーションのセットアップ
+/var/www/<アプリ名>にアプリを置くのが通例らしい
+
+varの所有者と所有グループがrootになっているので、testに変更する
+
+```
+drwxr-xr-x  19 root root  269 12月 29 16:49 var
+```
+
+```
+(EC2)
+$ sudo chown test:test /var
+```
+
+```
+drwxr-xr-x  19 test test  269 12月 29 16:49 var
+```
+
+var/にwwwを作成する
+
+```
+(EC2)
+$ cd /var
+$ mkdir www
+```
+
+GitHubにEC2からSSH接続できるようにする
+
+まずはEC2で公開鍵と秘密鍵を作成する
+
+```
+(EC2)
+$ cd ~/.ssh
+$ ssh-keygen -t rsa
+```
+
+configに設定を記述する
+
+```
+(EC2)
+$ vi config
+```
+
+以下を書く
+
+```
+Host github
+  Hostname github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa
+```
+
+id_rsa.pubをGitHubに登録する
+
+configのパーミッションを変更して、GitHubにSSH接続する
+
+```
+(EC2)
+$ chmod 700 config
+$ ssh github
+```
+
+clone用のURLをコピーして、/var/wwwでcloneする
+
+![clone](/images/clone.png)
+
+```
+(EC2)
+$ cd /var/www
+$ git clone git@github.com:roaris/scaffold_aws.git
+```
+
+bundle installをするために、bundlerをインストールする bundlerのバージョンはGemfile.lockの一番下に書いてある
+
+```
+$ gem install bundler -v '2.2.27'
+```
+
+cloneしたディレクトリまで移動して`bundle`を実行
+
+`An error occurred while installing sqlite3 (1.4.2), and Bundler cannot
+continue.`とエラーが出た
+
+`sudo yum install sqlite-devel`を実行することで解決する([参考](https://mebee.info/2021/01/14/post-27968/))
+
+`yarn install`もする
+

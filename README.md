@@ -607,4 +607,68 @@ $ bundle exec pumactl start
 
 これでpumaが起動するようになった
 
+## RDSへの接続
+RDSのエンドポイントをコピーしておく
+
+![RDS_endpoint](./images/rds_endpoint.png)
+
+```
+$ EDITOR='vi' bin/rails credentials:edit
+```
+
+以下のように編集する
+
+```
+# aws:
+#   access_key_id: 123
+#   secret_access_key: 345
+
+db:
+  endpoint: db-test.cbyzin7ydpfh.ap-northeast-1.rds.amazonaws.com
+  user_name: test
+  password: パスワード
+```
+
+編集を終えると、config/credentials.yml.encが作成される これはRDSのエンドポイントやユーザー名、パスワードを暗号化したもので、config/master.keyを使うことで復元することができる
+
+config/credentials.yml.encをpushした後、EC2でconfig/master.keyを作成し、ローカルのmaster.keyをコピーする
+
+```
+$ cd config
+$ touch master.key
+$ chmod 600 master.key
+$ vi master.key
+```
+
+EC2でも`EDITOR='vi' bin/rails credentials:edit`を行い、正しく復元できるかを確認する
+
+database.ymlで本番環境のDB設定を行う
+
+```
+production:
+  database: scaffold_aws
+  adapter: mysql2
+  encoding: utf8mb4
+  charset: utf8mb4
+  collation: utf8mb4_general_ci
+  username: <%= Rails.application.credentials.db[:user_name] %>
+  password: <%= Rails.application.credentials.db[:password] %>
+  host: <%= Rails.application.credentials.db[:endpoint] %>
+  pool: 20
+  timeout: 1000
+```
+
+データベースの作成とマイグレートをする
+
+```
+$ export RAILS_ENV=production
+$ bin/rails db:create
+Created database 'scaffold_aws'
+$ bin/rails db:migrate
+== 20211227125849 CreateTweets: migrating =====================================
+-- create_table(:tweets)
+   -> 0.0229s
+== 20211227125849 CreateTweets: migrated (0.0231s) ============================
+```
+
 

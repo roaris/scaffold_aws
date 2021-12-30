@@ -572,3 +572,39 @@ server {
 upstream pumaの部分はAPサーバーのソケット位置を記載していて、ここが間違っていると、WebサーバーとAPサーバーの連携が取れないので注意
 
 `sudo nginx`で起動 設定を変更した場合は、`sudo nginx -s reload`
+
+## pumaの起動
+pumaはGemfileに書かれていて、`bundle install`でインストールされている
+
+pumaの設定はconfig/puma.rbにあり、本番環境(EC2内)では、ソケットを作成する必要があるので、以下のように修正する
+
+```
+- port ENV.fetch("PORT") { 3000 }
++ if Rails.env == "production"
++   bind "unix:///var/www/scaffold_aws/tmp/sockets/puma.sock"
++ else
++  port ENV.fetch("PORT") { 3000 }
++ end
+```
+
+pumaを起動する
+
+```
+$ bundle exec pumactl start
+```
+
+これでうまくいかない `uninitialized constant #<Class:#<Puma::DSL:0x00000000014d3888>>::Rails`とエラーが出た puma.rbで使った`Rails`でエラーが出るらしい
+
+結局EC2内で編集することにした
+
+```
+(EC2)
+- port ENV.fetch("PORT") { 3000 }
++ bind "unix:///var/www/scaffold_aws/tmp/sockets/puma.sock"
+```
+
+`No such file or directory @ realpath_rec - /var/www/scaffold_aws/tmp/sockets`となったので、`mkdir tmp/sockets`した
+
+これでpumaが起動するようになった
+
+

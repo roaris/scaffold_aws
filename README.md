@@ -658,7 +658,7 @@ production:
   timeout: 1000
 ```
 
-データベースの作成とマイグレートをする
+データベースの作成とマイグレートをする(exportで設定した環境変数はログアウトのたびに消えるので注意)
 
 ```
 $ export RAILS_ENV=production
@@ -692,5 +692,23 @@ $ less log/production.log
 
 今回の場合は、アプリケーション側のエラーで、`ActionView::Template::Error (The asset "application.css" is not present in the asset pipeline.`というエラー文がログに出ていた
 
+## アセットパイプラインについて
+アセットパイプラインとはJavaScriptやCSSを連結するためのフレームワークで、連結することで、通信量が節約できたりする 本番環境では、アセットパイプラインでコンパイルされたファイルが必要になる
 
+コンパイルをする
 
+```
+$ bundle exec rake assets:precompile
+```
+
+public/assetsにコンパイルされたファイルができる
+
+コンパイルしたファイルを消す
+
+```
+$ bundle exec rake assets:clobber
+```
+
+画像もアセットパイプラインの対象で、コンパイルしないと本番環境で表示することができない 開発環境では、public下でもassets下においても大丈夫だが、public下はアセットプリコンパイルの対象とならないため、assets下においた方が良いだろう
+
+ところで、アセットプリコンパイルのプリコンパイルってなんだろう

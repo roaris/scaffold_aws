@@ -154,3 +154,46 @@ EC2の設定で、自動割り当てパブリックIPを無しに設定してい
 ![EC2詳細](/images/elastic_ip_2.png)
 
 (パブリックIPv4アドレスに注目)
+
+## EC2へSSH接続
+EC2を作成したときにダウンロードしたキーペアを.sshに移動する
+
+```
+$  mv ~/Downloads/test.pem ~/.ssh
+```
+
+作成したEC2からSSH接続の方法が見れる
+
+![SSH](/images/ssh.png)
+
+.sshに移動し、書かれているコマンドを実行する
+
+```
+$ cd ~/.ssh
+$ ssh -i "test.pem" ec2-user@13.113.171.196
+```
+
+初めての接続だけど大丈夫？と聞かれるのでyesで進む
+
+すると、test.pemのパーミッションがオープンすぎるという警告が出て、接続できない
+
+```
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0644 for 'test.pem' are too open.
+It is required that your private key files are NOT accessible by others.
+This private key will be ignored.
+Load key "test.pem": bad permissions
+ec2-user@13.113.171.196: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+```
+
+なので、以下のコマンドを実行して、自分だけ読み取り可能にする
+
+```
+$ chmod 400 test.pem
+```
+
+これで接続できるようになる
+
+

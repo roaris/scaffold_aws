@@ -457,7 +457,7 @@ $ nginx -v
 インストールが終わると、/etc/nginxが作成される 次に、nginxの設定を行う
 
 ```
-$ sudo vi /etc/nginx
+$ sudo vi /etc/nginx/nginx.conf
 ```
 
 デフォルトの内容を全て消して、以下に書き換える
@@ -670,5 +670,27 @@ $ bin/rails db:migrate
    -> 0.0229s
 == 20211227125849 CreateTweets: migrated (0.0231s) ============================
 ```
+
+## ログを見る
+以上の手順で大体おしまいだが、`http://13.113.171.196/tweets`を開いても上手くいかない
+
+![502](./images/502.png)
+
+502 Bad Gateway の場合は、/etc/nginx/nginx.confで設定した、エラーログを出力するファイル(/var/log/nginx/error.log)を見てみよう
+
+```
+$ sudo less /var/log/nginx/error.log
+```
+
+![sorry](./images/sorry.png)
+
+We're sorry, but something went wrong. の場合は、アプリケーション側のエラーなので、log/producton.logを見てみよう
+
+```
+$ less log/production.log
+```
+
+今回の場合は、アプリケーション側のエラーで、`ActionView::Template::Error (The asset "application.css" is not present in the asset pipeline.`というエラー文がログに出ていた
+
 
 

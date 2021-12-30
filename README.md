@@ -196,4 +196,86 @@ $ chmod 400 test.pem
 
 これで接続できるようになる
 
+## ec2-userの削除
+EC2にログインした時のユーザー、ec2-userはデフォルトで用意されているユーザーなので、攻撃を受けるリスクを減らすために、他のユーザーを作成し、ec2-userは削除する
+
+ユーザーの作成とパスワードの設定
+
+```
+(EC2)
+$ sudo adduser test
+$ sudo passwd test
+```
+
+新しく作成したユーザーに管理者権限を与える
+
+```
+(EC2)
+$ sudo visudo
+```
+
+エディタが開くので、`root ALL=(ALL) ALL`と書いてある部分を見つけ、以下のように編集する
+
+```
+## Allow root to run any commands anywhere
+root    ALL=(ALL)       ALL
+test    ALL=(ALL)       ALL
+```
+
+ユーザーをtestに切り替える
+
+```
+(EC2)
+$ sudo su - test
+```
+
+testユーザーでEC2にログインできるように、設定を行う
+
+ローカルで秘密鍵、公開鍵の作成
+```
+$ cd ~/.ssh
+$ ssh-keygen -t rsa
+```
+
+リモートで公開鍵を登録
+
+```
+(EC2)
+$ mkdir .ssh
+$ cd .ssh
+$ vi authorized_keys
+```
+
+ローカルで作成した公開鍵をauthorized_keysに書き込む
+
+ローカルの~/.ssh/configを編集して、簡単に接続できるようにする
+
+```
+$ vi ~/.ssh/config
+```
+
+以下の内容を追加
+
+```
+Host test
+  HostName 13.113.171.196
+  Port 22
+  User test
+  IdentityFile ~/.ssh/id_rsa
+```
+
+これで`ssh test`でログインできるようになると思いたいが、.sshとauthorized_keysのパーミッションを変えないとできなかった
+
+```
+(EC2)
+$ chmod 700 .ssh
+$ chmod 600 .ssh/authorized_keys
+```
+
+最後にec2-userを削除する
+
+```
+(EC2)
+$ sudo userdel -r ec2-user
+```
 

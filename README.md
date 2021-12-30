@@ -279,3 +279,73 @@ $ chmod 600 .ssh/authorized_keys
 $ sudo userdel -r ec2-user
 ```
 
+## パッケージのインストール
+まず、yum(パッケージ管理ツール)をアップデートする
+
+```
+$ sudo yum update
+```
+
+次に根幹となるパッケージをインストールする これは呪文
+
+```
+$ sudo yum install \
+git make gcc-c++ patch \
+openssl-devel \
+zlib-devel readline-devel \
+mysql mysql-devel \
+eadline-devel \
+epel-release
+```
+
+rbenv(Rubyのバージョン管理ツール)をインストールする
+```
+$ git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
+```
+
+.bash_profileにrbenvのパスを通すコマンドを記述する
+
+```
+$ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+$ echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+$ source .bash_profile
+```
+
+`printenv PATH`でPATHに追加されたか確認できる
+
+ruby-buildをインストールする rbenvとruby-buildで複数のバージョンのrubyが管理できるようになる
+
+```
+$ git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+$ rbenv rehash
+```
+
+rbenvを使って、使用するバージョンのRubyをインストールする
+
+```
+$ rbenv install -v 2.6.8
+$ rbenv global 2.6.8
+$ rbenv rehash
+$ ruby -v
+```
+
+次にnode.jsをインストールする
+
+```
+$ curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
+```
+
+↑これは呪文
+
+```
+$ sudo yum -y install nodejs
+$ node -v
+```
+
+最後にyarnをインストール
+
+```
+$ curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
+$ sudo yum -y install yarn
+$ yarn -v
+```

@@ -712,3 +712,64 @@ $ bundle exec rake assets:clobber
 画像もアセットパイプラインの対象で、コンパイルしないと本番環境で表示することができない 開発環境では、public下でもassets下においても大丈夫だが、public下はアセットプリコンパイルの対象とならないため、assets下においた方が良いだろう
 
 ところで、アセットプリコンパイルのプリコンパイルってなんだろう
+
+## pumaのデーモン化
+2020年にpumaから-dオプションが消えたので、systemdを使ってデーモン化する必要がある
+
+[Remove daemonization](https://github.com/puma/puma/issues/1983)
+
+参考にした資料
+- [systemdの*.serviceファイルの書き方](https://qiita.com/masami256/items/ef0f23125cf8255e4857)
+- [Railsで始めるsystemd入門](https://zenn.dev/ymasutani/articles/ce42131f0e7b1a)
+- [Rails pumaをsystemdで動かす](https://morizyun.github.io/ruby/rails-tips-puma-systemd.html)
+- [Puma(Rails6)をsystemdで起動させる](https://www.rochefort.dev/posts/puma-systemd/)
+- [Rails5のpumaをsystemdで起動するメモ](https://qiita.com/AQeNku/items/81ddae388d8615125a24)
+- [puma/docs/systemd.md (puma公式のsystemdの書き方)](https://github.com/puma/puma/blob/v5.4.0/docs/systemd.md)
+
+/etc/systemd/system/puma.serviceに以下のように記述
+
+```
+[Unit]
+Description=Puma HTTP Server
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/scaffold_aws
+ExecStart=/home/test/.rbenv/shims/bundle exec puma -C /var/www/scaffold_aws/config/puma.rb
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+起動
+
+```
+$ sudo systemctl start puma.service
+```
+
+ステータス確認(-lをつけるとより詳細に見れる)
+```
+$ sudo systemctl status puma.service
+```
+
+停止
+```
+$ sudo systemctl stop puma.service
+```
+
+再起動
+```
+$ sudo systemctl restart puma.service
+```
+
+RAILS_ENVをproductionにしていてもどういうわけか、systemdでpumaを起動すると、development環境になってしまう
+
+なので、config/puma.rbを以下のように修正([参考](https://docs.ruby-lang.org/ja/latest/method/ENV/s/fetch.html))
+
+```
+- environment ENV.fetch("RAILS_ENV") { "development" }
++ environment ENV.fetch("RAILS_ENV") { "production" }
+```
+
+以上でscaffoldで作成したアプリをAWSにデプロイすることができた

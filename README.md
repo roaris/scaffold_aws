@@ -446,3 +446,129 @@ continue.`とエラーが出た
 
 `yarn install`もする
 
+## nginxのインストール
+Webサーバーの役割
+
+```
+$ sudo amazon-linux-extras install nginx1
+$ nginx -v
+```
+
+インストールが終わると、/etc/nginxが作成される 次に、nginxの設定を行う
+
+```
+$ sudo vi /etc/nginx
+```
+
+デフォルトの内容を全て消して、以下に書き換える
+
+```
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+    gzip on;
+    gzip_http_version 1.0;
+    gzip_proxied any;
+    gzip_min_length 500;
+    gzip_disable "MSIE [1-6]\.";
+    gzip_types text/plain text/xml text/css
+               text/comma-separated-values
+               text/javascript application/x-javascript
+               application/atom+xml;
+}
+```
+
+次にアプリケーション別のファイル作成をする
+
+```
+$ cd /etc/nginx/conf.d
+$ sudo vi scaffold_aws.conf
+```
+
+以下の内容を書く
+
+```
+upstream puma {
+  server unix:/var/www/scaffold_aws/tmp/sockets/puma.sock;
+}
+
+server {
+  server_name  scaffold_aws.com;
+
+  keepalive_timeout 0;
+
+  access_log  /var/log/nginx/scaffold_aws.access.log  main;
+  client_max_body_size 4G;
+
+  root /var/www/test/public;
+  location ~ .*\.(swf|SWF|ico|ICO|jar|txt|gz|js) {
+    root /var/www/scaffold_aws/public;
+    expires 15m;
+    break;
+  }
+  location ~ ^\/fonts\/* {
+    root /var/www/scaffold_aws/public;
+    expires 15m;
+    break;
+  }
+  location ~ ^\/assets\/* {
+    root /var/www/scaffold_aws/public;
+    break;
+  }
+  location ~ ^\/favicon\/* {
+    root /var/www/scaffold_aws/public;
+    break;
+  }
+  location = /manifest.json {
+    root /var/www/scaffold_aws/public;
+    break;
+  }
+  location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+
+    #auth_basic "Restricted";
+    #auth_basic_user_file /etc/nginx/.htpasswd;
+    #if ($http_x_forwarded_proto = "http") {
+     #rewrite ^(.*) https://$server_name$1
+      #break;
+    #}
+    proxy_pass http://puma;
+  }
+}
+```
+
+upstream pumaの部分はAPサーバーのソケット位置を記載していて、ここが間違っていると、WebサーバーとAPサーバーの連携が取れないので注意
+
+`sudo nginx`で起動 設定を変更した場合は、`sudo nginx -s reload`

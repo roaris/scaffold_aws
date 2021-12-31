@@ -773,3 +773,24 @@ RAILS_ENVをproductionにしていてもどういうわけか、systemdでpuma�
 ```
 
 以上でscaffoldで作成したアプリをAWSにデプロイすることができた
+
+## ドメインの登録
+参考: https://aws.amazon.com/jp/getting-started/hands-on/get-a-domain/
+
+Route53ダッシュボードを開き、ドメインの登録をクリック
+
+ドメイン名に_を使うことができなかった トップレベルドメイン(TLD)は一番安かった.clickを選択
+
+![tld](./images/tld.png)
+
+次に、DNSの設定を行う レコード名のところにはwwwを入れても良いが、入れなくても良い([参考](https://mtame.jp/column/www/))
+
+![dns](./images/dns.png)
+
+これによって、新しくDNSにAレコードが追加される([参考](https://help.onamae.com/answer/7883))
+
+![arecord](./images/arecord.png)
+
+ドメインが浸透したかを確認するのには、[whatsmydns.net](https://www.whatsmydns.net/)を使おう
+
+![whatsymdns](./images/whatsmydns.png)

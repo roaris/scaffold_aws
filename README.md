@@ -794,3 +794,91 @@ Route53ダッシュボードを開き、ドメインの登録をクリック
 ドメインが浸透したかを確認するのには、[whatsmydns.net](https://www.whatsmydns.net/)を使おう
 
 ![whatsymdns](./images/whatsmydns.png)
+
+## ALBを使ってHTTPS化する
+HTTPSによって、通信を暗号化することができる 逆に暗号化しないと(HTTPのままだと)、セッションハイジャックなどの脆弱性がある状態になってしまう
+
+今の状態でHTTPSアクセスしようとしてもできない HTTPSは、サーバー側にSSL証明書を配置し、それをクライアントが検証することによって成り立つためである
+
+また、HTTPでアクセスした時もHTTPSにリダイレクトするようにしたい
+
+HTTPS化する手順として、最も楽でお金のかからない方法はALBを使う方法らしい([参考](https://recipe.kc-cloud.jp/archives/11067)) ALBはApplication Load Balancerの略で、AWSのロードバランサーは他にCLBとNLBがある ALBはアプリケーション層に特化したロードバランサーらしい([参考](https://www.wafcharm.com/blog/difference-between-alb-and-elb/))
+
+ALBを使えば、後からMultiAZにすることもできるし、確かにこれが良さそう
+
+まず、SSL証明書を発行する必要がある
+
+ACM(Amazon Certificate Manager)を使う
+
+![sslcertificate](./images/sslcertificate.png)
+
+発行しただけでは、サーバーに配置することはできなく、検証を行う必要がある 下の画面のRoute53でレコードを作成をクリックする
+
+![sslcertificate2](./images/sslcertificate2.png)
+
+すると、Route53でタイプがCNAMEのレコードが作成される CNAMEはドメインを別のドメインに置き換えるレコードらしいが、なんで証明書の検証がこれでできるんだろう
+
+次にターゲットグループを作成する ターゲットグループとは、ALBがリクエストを分散させる対象で、EC2やLambdaを指定することができる
+
+![target-group1](./images/target-group1.png)
+
+唐突に英語になる設定画面
+
+設定項目の説明はドキュメントを見ると良さそう
+
+- [Application Load Balancer のターゲットグループ](https://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/application/load-balancer-target-groups.html#target-group-protocol-version)
+- [Application Load Balancer の作成](https://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/application/create-application-load-balancer.html)
+
+target typeは、EC2を対象とする場合は、Instancesを選ぶ
+
+Protocolは謎 ドキュメントによると、
+```
+デフォルトでは、ロードバランサーはターゲットグループの作成時に指定したプロトコルとポート番号を使用して、リクエストをターゲットにルーティングします。
+```
+とある どういう意味だろう
+
+とりあえずHTTPにした
+
+Protocol Versionは、HTTP2を選んでしまうと、HTTPアクセスして、リダイレクトすることができなくなってしまうので、HTTP1を選ぼう
+
+![target-group2](./images/target-group2.png)
+
+ヘルスチェックも使い方がよくわからないので、そのまま
+
+最後にターゲットグループに含めるEC2を選択して、終了
+
+![target-group3](./images/target-group3.png)
+
+次に、ALBの作成を行う
+
+今回はクライアントからのリクエストをターゲットグループに割り振るALBを作成したいので、SchemeはInternet-facingを選ぼう
+
+![alb1](./images/alb1.png)
+
+MappingsではAZを指定して、そのAZ内のサブネットを選択する RDSと同様、2つ以上選択する必要がある サブネットはパブリックなもの(インターネットゲートウェイと繋がっているもの)を選択する
+
+![alb2](./images/alb2.png)
+
+Listeners and routingでは、HTTPとHTTPSを指定して、ターゲットグループは先ほど指定したものを選ぼう HTTPSを選ぶと、SSL証明書を選択するフォームが出てくるので、ACMで作成したものを選択する Security policyは分からないので、デフォルトのまま
+
+![alb3](./images/alb3.png)
+
+次に、Route53でドメインとALBを紐付ける 既にドメインとIPアドレスが紐づいたAレコードがあるので、下のように変更する
+
+![route53alb](./images/route53alb.png)
+
+これでHTTPSでアクセスできるようになった
+
+![https](./images/https.png)
+
+最後に、HTTPでアクセスした時にリダイレクトするようにする
+
+作成したALBを選択し、HTTP : 80 のルールを編集する
+
+![redirect1](./images/redirect1.png)
+
+以下のように修正する
+
+![redirect2](./images/redirect2.png)
+
+これでHTTPでアクセスしてもHTTPSにリダイレクトされるようになった
